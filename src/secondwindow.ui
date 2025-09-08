@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- UI файл - это XML-описание интерфейса, создаваемое Qt Designer -->
+<!-- Версия 4.0 - стандартная версия формата для Qt5/Qt6 -->
+<ui version="4.0">
+ <!-- Имя класса, которое будет использоваться в автогенерированном коде -->
+ <class>SecondWindow</class>
+
+ <!-- Корневой виджет - QMainWindow (главное окно) -->
+ <widget class="QMainWindow" name="SecondWindow">
+
+  <!-- Свойство geometry определяет размер и положение окна -->
+  <property name="geometry">
+   <rect>
+    <x>0</x>      <!-- Позиция X (от левого края экрана) -->
+    <y>0</y>      <!-- Позиция Y (от верхнего края экрана) -->
+    <width>800</width>   <!-- Ширина окна в пикселях -->
+    <height>600</height> <!-- Высота окна в пикселях -->
+   </rect>
+  </property>
+
+  <!-- Заголовок окна, отображаемый в строке заголовка -->
+  <property name="windowTitle">
+   <string>Второе окно</string>
+  </property>
+
+  <!-- Центральный виджет - обязательный элемент QMainWindow -->
+  <!-- В него помещается основное содержимое окна -->
+  <widget class="QWidget" name="centralwidget">
+
+   <!-- QVBoxLayout - вертикальный менеджер компоновки -->
+   <!-- Автоматически размещает элементы сверху вниз -->
+   <layout class="QVBoxLayout" name="verticalLayout">
+
+    <!-- Свойство spacing - расстояние между элементами в пикселях -->
+    <property name="spacing">
+     <number>20</number>
+    </property>
+
+    <!-- Свойство margin - отступы от краёв контейнера -->
+    <property name="leftMargin">
+     <number>20</number>
+    </property>
+    <property name="topMargin">
+     <number>20</number>
+    </property>
+    <property name="rightMargin">
+     <number>20</number>
+    </property>
+    <property name="bottomMargin">
+     <number>20</number>
+    </property>
+
+    <!-- Первый элемент - заголовок окна -->
+    <item>
+     <widget class="QLabel" name="titleLabel">
+      <!-- HTML-форматирование поддерживается в QLabel -->
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align="center"&gt;&lt;span style=" font-size:18pt; font-weight:600;"&gt;Добро пожаловать во второе окно!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <!-- Выравнивание текста по центру -->
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+
+    <!-- Второй элемент - информационный текст -->
+    <item>
+     <widget class="QLabel" name="infoLabel">
+      <property name="text">
+       <string>Это второе окно вашего приложения Qt.
+Вы успешно переключились между окнами!
+
+Основные концепции, которые здесь используются:
+• Сигналы и слоты для взаимодействия между окнами
+• Управление видимостью окон (show/hide)
+• Передача управления между компонентами</string>
+      </property>
+      <!-- WordWrap - автоматический перенос текста -->
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+      <!-- Выравнивание по верхнему краю -->
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignTop</set>
+      </property>
+     </widget>
+    </item>
+
+    <!-- Spacer - пустое пространство, которое растягивается -->
+    <!-- Используется для прижатия кнопки к низу окна -->
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Orientation::Vertical</enum>
+      </property>
+      <!-- sizeHint - предпочтительный размер -->
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+      <!-- sizeType::Expanding - spacer будет занимать всё доступное место -->
+      <property name="sizeType">
+       <enum>QSizePolicy::Policy::Expanding</enum>
+      </property>
+     </spacer>
+    </item>
+
+    <!-- Текстовое поле для демонстрации -->
+    <item>
+     <widget class="QTextEdit" name="textEdit">
+      <!-- Максимальная высота ограничена для компактности -->
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>  <!-- Максимальное значение для ширины -->
+        <height>100</height>      <!-- Ограничение высоты -->
+       </size>
+      </property>
+      <!-- Подсказка-заполнитель -->
+      <property name="placeholderText">
+       <string>Здесь вы можете написать что-нибудь...</string>
+      </property>
+     </widget>
+    </item>
+
+    <!-- Кнопка возврата к первому окну -->
+    <item>
+     <widget class="QPushButton" name="backButton">
+      <!-- Текст на кнопке -->
+      <property name="text">
+       <string>Вернуться к первому окну</string>
+      </property>
+      <!-- Минимальная высота для удобства нажатия -->
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>40</height>
+       </size>
+      </property>
+      <!-- Стиль кнопки через CSS -->
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+}
+QPushButton:hover {
+    background-color: #45a049;
+}
+QPushButton:pressed {
+    background-color: #3d8b40;
+}</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+
+  <!-- Строка меню (пустая, но обязательная для QMainWindow) -->
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+
+  <!-- Строка состояния (может использоваться для отображения подсказок) -->
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+
+ <!-- Раздел ресурсов (изображения, иконки и т.д.) - пока пустой -->
+ <resources/>
+
+ <!-- Раздел соединений сигналов и слотов -->
+ <!-- Мы делаем это в коде, поэтому здесь пусто -->
+ <connections/>
+</ui>

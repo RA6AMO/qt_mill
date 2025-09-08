@@ -1,0 +1,33 @@
+# Build dirs
+/build/
+/src/build/
+/build-*/
+/cmake-build-*/
+
+# CMake
+/CMakeCache.txt
+/CMakeFiles/
+/CMakeScripts/
+/Testing/
+/CTestTestfile.cmake
+/Makefile
+/install_manifest.txt
+/compile_commands.json
+/_deps/
+
+# Qt Creator / QMake
+*.user
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.qmlproject.user
+*.qmlproject.user.*
+
+# IDE
+/.vs/
+/.vscode/
+/.cache/
+
+# Logs
+*.log
