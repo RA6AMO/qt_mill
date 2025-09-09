@@ -1,3 +1,4 @@
+#pragma once
 // Защита от повторного включения заголовочного файла
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
@@ -36,6 +37,8 @@ private slots:
 
     // Вызывается при нажатии кнопки перехода ко второму окну
     void onSwitchToSecondWindow();
+
+    void onSwitchToSecondWindowGuest();
 
     // Вызывается когда второе окно сигнализирует о необходимости вернуться
     void onShowFirstWindow();

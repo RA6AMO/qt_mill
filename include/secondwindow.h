@@ -1,3 +1,4 @@
+#pragma once
 // Защита от повторного включения заголовочного файла
 // Если SECONDWINDOW_H уже определён, препроцессор пропустит весь код до #endif
 #ifndef SECONDWINDOW_H
@@ -27,6 +28,7 @@ class SecondWindow : public QMainWindow {
     Q_OBJECT
 
 public:
+    void guestSeterT();
     // Конструктор класса
     // explicit - запрещает неявное преобразование типов
     // QWidget* parent = nullptr - родительский виджет (для управления памятью)
@@ -53,6 +55,7 @@ private:
     // Указатель на UI-класс, автоматически генерируемый из .ui файла
     // Через него мы получаем доступ ко всем элементам интерфейса
     Ui::SecondWindow* ui;
+    bool guest;
 };
 
 #endif // SECONDWINDOW_H

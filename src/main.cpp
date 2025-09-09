@@ -1,4 +1,5 @@
 #include <QApplication>
+//#include <QTableView>
 #include "mainwindow.h"
 
 // Точка входа в программу
@@ -25,9 +26,8 @@ int main(int argc, char* argv[]) {
     window.setWindowTitle(QStringLiteral("Qt Widgets — проверка"));
 
     // Устанавливаем начальный размер окна
-    // Параметры: ширина (640 пикселей), высота (400 пикселей)
     // Пользователь может изменить размер окна после запуска
-    window.resize(640, 400);
+    window.resize(300, 180);
 
     // Показываем окно на экране
     // До вызова show() окно существует в памяти, но не видно пользователю

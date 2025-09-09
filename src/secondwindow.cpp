@@ -10,10 +10,13 @@ SecondWindow::SecondWindow(QWidget* parent)
     : QMainWindow(parent),  // Вызываем конструктор базового класса
       ui(new Ui::SecondWindow)  // Создаём объект UI в динамической памяти
 {
+    guest = true;
     // setupUi() - метод из автогенерированного класса
     // Он создаёт все виджеты, описанные в .ui файле,
     // и размещает их в окне согласно дизайну
     ui->setupUi(this);
+
+    ui->backButton->setDisabled(true);
 
     // Подключаем сигнал clicked() от кнопки backButton к нашему слоту
     // connect() - функция Qt для связывания сигналов и слотов
@@ -35,6 +38,11 @@ SecondWindow::~SecondWindow() {
     // Важно: виджеты, созданные через setupUi(), удаляются автоматически
     // как дочерние объекты окна, но сам ui-объект нужно удалить явно
     delete ui;
+}
+
+void SecondWindow::guestSeterT() {
+    guest = true;
+    ui->backButton->setDisabled(false);
 }
 
 // Реализация слота для обработки нажатия кнопки "Назад"

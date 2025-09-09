@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget* parent)
     // Создаём и настраиваем интерфейс из .ui файла
     ui->setupUi(this);
 
+
     // ВАЖНО: Создаём второе окно сразу при инициализации главного окна
     // this передаём как parent - это обеспечивает автоматическое удаление
     // второго окна при удалении главного (управление памятью Qt)
@@ -26,10 +27,15 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui->pushButton, &QPushButton::clicked,
             this, &MainWindow::onSwitchToSecondWindow);
 
+    connect(ui->pushButton_2, &QPushButton::clicked,
+        this, &MainWindow::onSwitchToSecondWindowGuest);
+
+
     // 2. Соединение: сигнал из второго окна -> слот показа первого окна
     // Когда второе окно испускает backToFirstWindow, мы показываем первое окно
     connect(secondWindow, &SecondWindow::backToFirstWindow,
             this, &MainWindow::onShowFirstWindow);
+
 
     // Примечание: используем новый синтаксис connect (Qt5+)
     // Преимущества:
@@ -61,6 +67,27 @@ void MainWindow::onSwitchToSecondWindow() {
 
         // show() - показывает второе окно
         // Если окно было скрыто, оно появится в том же состоянии
+        secondWindow->show();
+
+
+        // Альтернативные методы:
+        // - close(): закрывает окно (может удалить из памяти)
+        // - setVisible(false/true): то же, что hide()/show()
+        // - showMinimized(): показать свёрнутым
+        // - showMaximized(): показать развёрнутым на весь экран
+        // - showFullScreen(): полноэкранный режим
+    }
+}
+
+void MainWindow::onSwitchToSecondWindowGuest(){
+    if (secondWindow) {
+        // hide() - скрывает текущее окно (не удаляет из памяти!)
+        // Окно остаётся в памяти со всеми данными
+        this->hide();
+
+        // show() - показывает второе окно
+        // Если окно было скрыто, оно появится в том же состоянии
+        //secondWindow->ui->backButton->
         secondWindow->show();
 
         // Альтернативные методы:
