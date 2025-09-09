@@ -7,6 +7,8 @@
 // Подключаем базовый класс для создания окон в Qt
 #include <QMainWindow>
 
+class QTreeWidgetItem;
+class QString;
 // Макросы Qt для начала пространства имён
 // Это нужно для правильной работы с UI-файлами, созданными в Qt Designer
 QT_BEGIN_NAMESPACE
@@ -29,6 +31,9 @@ class SecondWindow : public QMainWindow {
 
 public:
     void guestSeterT();
+    bool fillTreeWidget();
+    bool addItemToTreeWidget(QTreeWidgetItem *parent, const QString &text);
+    bool removeItemFromTreeWidget(QTreeWidgetItem *item);
     // Конструктор класса
     // explicit - запрещает неявное преобразование типов
     // QWidget* parent = nullptr - родительский виджет (для управления памятью)
