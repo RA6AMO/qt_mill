@@ -4,6 +4,10 @@
 #include "TreeService.h"
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QTimer>
+//#include <QThread>
+//#include <windows.h>
+
 
 static constexpr int COLUMN_NAME = 0;
 
@@ -27,6 +31,8 @@ void WidgetsTreeFeeler::initialize() {
     m_tree->setHeaderHidden(true);
     m_tree->setEditTriggers(QAbstractItemView::EditKeyPressed | QAbstractItemView::SelectedClicked);
     m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    m_tree->setSelectionMode(QAbstractItemView::SingleSelection);
 
     connect(m_tree, &QTreeWidget::itemExpanded, this, &WidgetsTreeFeeler::onItemExpanded);
     connect(m_tree, &QTreeWidget::itemChanged, this, &WidgetsTreeFeeler::onItemChanged);
@@ -92,10 +98,23 @@ void WidgetsTreeFeeler::onItemChanged(QTreeWidgetItem *item, int column) {
 
 void WidgetsTreeFeeler::onCustomContextMenuRequested(const QPoint &pos) {
     QTreeWidgetItem *item = m_tree->itemAt(pos);
+
+        // Добавить отладочную информацию
+    qDebug() << "Context menu at pos:" << pos;
+    qDebug() << "Item:" << item;
+    if (item) {
+        qDebug() << "Item id:" << item->data(COLUMN_NAME, Qt::UserRole).toLongLong();
+        qDebug() << "Item text:" << item->text(COLUMN_NAME);
+    }
+
     QMenu menu(m_tree);
     QAction *addAct = menu.addAction("Добавить ребёнка");
     QAction *renAct = menu.addAction("Переименовать");
     QAction *delAct = menu.addAction("Удалить");
+
+    if (!item || item->data(COLUMN_NAME, Qt::UserRole).toLongLong() == 0) {
+        renAct->setEnabled(false);
+    }
 
     QObject::connect(addAct, &QAction::triggered, this, [this, item]() { createChild(item); });
     QObject::connect(renAct, &QAction::triggered, this, [this, item]() { renameItem(item); });
@@ -122,8 +141,40 @@ void WidgetsTreeFeeler::createChild(QTreeWidgetItem *parentItem) {
 }
 
 void WidgetsTreeFeeler::renameItem(QTreeWidgetItem *item) {
-    if (!item) return;
+    if (!item) {
+        qDebug() << "renameItem: item is null";
+        return;
+    }
+
+    // Проверяем, что это не placeholder
+    const qint64 id = item->data(COLUMN_NAME, Qt::UserRole).toLongLong();
+    if (id == 0) {
+        qDebug() << "renameItem: cannot edit placeholder";
+        return;
+    }
+
+    // Проверяем, что элемент не редактируется уже
+    if (m_tree->isPersistentEditorOpen(item, COLUMN_NAME)) {
+        qDebug() << "renameItem: item is already being edited";
+        return;
+    }
+
+    // Убеждаемся, что элемент выделен
+    m_tree->setCurrentItem(item);
+
+    // Запускаем редактирование
     m_tree->editItem(item, COLUMN_NAME);
+
+    // Проверяем, что редактирование действительно запустилось
+    if (!m_tree->isPersistentEditorOpen(item, COLUMN_NAME)) {
+        qDebug() << "renameItem: editItem failed, trying alternative approach";
+        // Альтернативный способ - через двойной клик
+        m_tree->setEditTriggers(QAbstractItemView::DoubleClicked);
+        QTimer::singleShot(0, [this, item]() {
+            m_tree->editItem(item, COLUMN_NAME);
+            m_tree->setEditTriggers(QAbstractItemView::EditKeyPressed | QAbstractItemView::SelectedClicked);
+        });
+    }
 }
 
 void WidgetsTreeFeeler::deleteItem(QTreeWidgetItem *item) {
