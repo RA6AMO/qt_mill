@@ -1,8 +1,17 @@
 // Подключаем заголовочный файл нашего класса
+// secondwindow.cpp — инициализация Db/репозитория/сервиса и связывание с QTreeWidget
 #include "secondwindow.h"
 // Подключаем автоматически сгенерированный UI-класс
 // Файл ui_secondwindow.h создаётся из secondwindow.ui при компиляции
 #include "ui_secondwindow.h"
+#include <QtSql/QSqlDatabase>
+
+#include "Db.h"
+#include "INodeRepository.h"
+#include "INodeFactory.h"
+#include "TreeService.h"
+#include "widgetsTreeFeeler.h"
+#include "TreeWidgetEx.h"
 
 // Конструктор SecondWindow
 // Список инициализации (:) выполняется до тела конструктора
@@ -18,7 +27,33 @@ SecondWindow::SecondWindow(QWidget* parent)
 
     ui->backButton->setDisabled(true);
 
-    fillTreeWidget();
+    // Инициализация БД и сервисов
+    const QString conn = Db::openAndInit("app_conn", "tree.sqlite");
+    QSqlDatabase db = QSqlDatabase::database(conn);
+    m_db = new QSqlDatabase(db);
+    m_factory = makeNodeFactory();
+    m_repo = makeSqliteNodeRepository(*m_db);
+    m_service = std::make_unique<TreeService>(std::move(m_repo), std::move(m_factory));
+
+    // Подмена QTreeWidget на расширенный класс в рантайме не требуется — он уже QTreeWidget.
+    // Для простоты обернём существующий в feeler (он принимает TreeWidgetEx*, кастуем безопасно)
+    auto *treeEx = qobject_cast<TreeWidgetEx*>(ui->treeWidget);
+    if (!treeEx) {
+        // Если ui->treeWidget — обычный QTreeWidget, заменим виджет на наш класс
+        TreeWidgetEx *replacement = new TreeWidgetEx(ui->centralwidget);
+        replacement->setObjectName("treeWidget");
+        replacement->setGeometry(ui->treeWidget->geometry());
+        replacement->setHeaderHidden(true);
+        QTreeWidget *oldWidget = ui->treeWidget;
+        oldWidget->hide();
+        oldWidget->setParent(nullptr);
+        ui->treeWidget = replacement; // безопасно, тк это поле из ui-класса
+        delete oldWidget;
+        treeEx = replacement;
+    }
+
+    m_feeler = std::make_unique<WidgetsTreeFeeler>(treeEx, m_service.get(), this);
+    m_feeler->initialize();
 
     //ui->treeWidget->setColumnCount(2);
     // Подключаем сигнал clicked() от кнопки backButton к нашему слоту
@@ -35,12 +70,51 @@ SecondWindow::SecondWindow(QWidget* parent)
             this, &SecondWindow::onBackButtonClicked);
 }
 
+bool SecondWindow::fillTreeWidget() {
+    if (m_feeler) { m_feeler->initialize(); return true; }
+    return false;
+}
+
+bool SecondWindow::addItemToTreeWidget(QTreeWidgetItem *parent, const QString &text) {
+    if (!ui || !ui->treeWidget || !m_service) return false;
+    qint64 parentId = 1;
+    if (parent) parentId = parent->data(0, Qt::UserRole).toLongLong();
+    try {
+        const qint64 newId = m_service->createNode(parentId, text, {});
+        QTreeWidgetItem *item = new QTreeWidgetItem();
+        item->setText(0, text);
+        item->setData(0, Qt::UserRole, QVariant::fromValue<qlonglong>(newId));
+        if (parent) parent->addChild(item); else ui->treeWidget->addTopLevelItem(item);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+bool SecondWindow::removeItemFromTreeWidget(QTreeWidgetItem *item) {
+    if (!item || !m_service) return false;
+    const qint64 id = item->data(0, Qt::UserRole).toLongLong();
+    try {
+        m_service->deleteNode(id);
+        delete item;
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
 // Деструктор SecondWindow
 SecondWindow::~SecondWindow() {
     // Удаляем UI-объект из памяти
     // Важно: виджеты, созданные через setupUi(), удаляются автоматически
     // как дочерние объекты окна, но сам ui-объект нужно удалить явно
     delete ui;
+    if (m_db) {
+        QString name = m_db->connectionName();
+        m_db->close();
+        delete m_db;
+        QSqlDatabase::removeDatabase(name);
+    }
 }
 
 void SecondWindow::guestSeterT() {
@@ -58,7 +132,7 @@ void SecondWindow::onBackButtonClicked() {
     // После испускания сигнала MainWindow получит уведомление
     // и выполнит соответствующие действия (покажет себя и скроет это окно)
 }
-
+/*
 bool SecondWindow::fillTreeWidget() {
     QTreeWidgetItem *Root1 = new QTreeWidgetItem(ui->treeWidget);
     Root1->setText(0, "Фрезы");
@@ -89,3 +163,4 @@ bool SecondWindow::removeItemFromTreeWidget(QTreeWidgetItem *item) {
     delete item;
     return true;
 }
+    */

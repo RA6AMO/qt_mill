@@ -1,0 +1,139 @@
+Проект: Иерархическое дерево (QTreeWidget) с синхронизацией в SQLite (adjacency list)
+
+Содержание
+1) Концепция и архитектура (как всё устроено и взаимодействует)
+2) Описание каждого файла (назначение и краткое содержание)
+3) Как использовать (шаги запуска, работа в UI, типичные операции)
+4) Инварианты, валидация имён и поведение ошибок
+5) Lazy loading, Drag&Drop и особенности производительности
+6) Замечания по сборке/зависимостям
+
+----------------------------------------
+1) Концепция и архитектура
+----------------------------------------
+Цель: обеспечить бесконечное расширение дерева в рантайме, хранить структуру в SQLite по схеме adjacency list (parent_id), поддерживать уникальность имён среди сиблингов (BINARY/case-sensitive), лениво подгружать детей при раскрытии узлов, и синхронизировать все операции UI ↔ БД через стабильный целочисленный id.
+
+Главные слои:
+- Домен/сервис:
+  - include/Node.h — модель узла и NodeDTO (минимальные данные для UI).
+  - include/INodeFactory.h + src/NodeFactory.cpp — нормализация/валидация имён и создание узлов.
+  - include/INodeRepository.h + src/SqliteNodeRepository.cpp — доступ к SQLite, все записи в транзакциях, подготовленные запросы, PRAGMA foreign_keys=ON на уровне Db.
+  - include/TreeService.h + src/TreeService.cpp — бизнес-логика: create/rename/move/delete, buildPath/resolvePath, listChildren, payload.
+  - include/Errors.h — типизированные исключения (DuplicateName, InvalidName, NotFound, MoveIntoDescendant, DbError).
+
+- Доступ к БД:
+  - include/Db.h + src/Db.cpp — открытие SQLite (QSqlDatabase), включение foreign_keys, миграции (создание таблиц/индексов), обеспечение корня с id=1.
+  - Файл БД: tree.sqlite (в корне проекта). Таблица nodes: (id, parent_id, name, payload, created_at, updated_at).
+
+- UI-слой:
+  - include/TreeWidgetEx.h + src/TreeWidgetEx.cpp — QTreeWidget с перехватом dropEvent для подтверждения перемещений через сервис (запрет невидимых изменений UI).
+  - include/widgetsTreeFeeler.h + src/widgetsTreeFeeler.cpp — связка между QTreeWidget и TreeService: ленивая подгрузка при itemExpanded, контекстное меню (добавить/переименовать/удалить), реакция на itemChanged (rename), отображение плейсхолдера для стрелки разворота, хранение id в Qt::UserRole.
+  - include/secondwindow.h + src/secondwindow.cpp — интеграция всего в окно SecondWindow: инициализация Db/Repository/Factory/Service, замена стандартного QTreeWidget на TreeWidgetEx (если из .ui пришёл обычный), создание WidgetsTreeFeeler и первичная загрузка детей корня.
+
+Связи и поток данных:
+- UI генерирует событие (например, «добавить ребёнка»). WidgetsTreeFeeler вызывает соответствующий метод TreeService.
+- TreeService валидирует вход (имя, циклы при move и т.п.), обращается к INodeRepository. Репозиторий выполняет транзакцию в SQLite.
+- При успехе WidgetsTreeFeeler синхронно/минимально обновляет QTreeWidget (создаёт/удаляет элементы, обновляет текст). ID узла всегда хранится в item->data(0, Qt::UserRole).
+- Для ленивой подгрузки: при раскрытии узла сначала был добавлен плейсхолдер-ребёнок (id=0), затем при itemExpanded плейсхолдер удаляется и из БД подгружаются реальные дети.
+
+----------------------------------------
+2) Описание каждого файла
+----------------------------------------
+include/Node.h
+- CaseSensitiveComparator — компаратор QString (Qt::CaseSensitive).
+- Node — доменная модель; NodeDTO — упрощённая структура для UI (id, parentId, name, hasChildren).
+
+include/INodeFactory.h, src/NodeFactory.cpp
+- INodeFactory — интерфейс нормализации/валидации имени (trim; запрет пустых, длина ≤ 255, запрет '/').
+- makeNodeFactory() — фабричная функция получения реализации.
+
+include/Errors.h
+- Исключения: DuplicateName, InvalidName, NotFound, MoveIntoDescendant, DbError.
+
+include/Db.h, src/Db.cpp
+- Db::openAndInit(connectionName, filePath) — открывает SQLite по connectionName, включает foreign_keys, применяет миграции, обеспечивает root(id=1).
+- В миграциях: таблица nodes, уникальный индекс (parent_id, name), индекс по parent_id.
+
+include/INodeRepository.h, src/SqliteNodeRepository.cpp
+- INodeRepository — CRUD и помощники: insert, updateName, updateParent, remove, get, findChildByName, getChildren, getParentId, hasChildren, set/getPayload.
+- makeSqliteNodeRepository(db) — создание реализации на QtSql.
+- Все write-операции — в транзакциях; подготовленные выражения; ловим ошибки UNIQUE для DuplicateName.
+
+include/TreeService.h, src/TreeService.cpp
+- TreeService — бизнес-операции:
+  - createNode(parentId, name[, payload])
+  - renameNode(id, newName)
+  - moveNode(id, newParentId) — запрет перемещения в собственное поддерево
+  - deleteNode(id)
+  - buildPath(id) — путь собирается подъёмом parent_id до корня (root не включается)
+  - resolvePath(path) — парсит сегменты, идёт от корня, ищет дочерние по имени
+  - listChildren(parentId[, limit, offset]) — отдаёт NodeDTO с признаком hasChildren
+  - setPayload/getPayload
+- Внутренний кеш id→(parentId,name) для ускорения buildPath.
+
+include/TreeWidgetEx.h, src/TreeWidgetEx.cpp
+- Класс QTreeWidget с переопределённым dropEvent: перед применением перемещения эмитит сигнал requestMove(nodeId, newParentId, accepted), решение принимает сервис.
+
+include/widgetsTreeFeeler.h, src/widgetsTreeFeeler.cpp
+- Связывает QTreeWidget и TreeService. Реализует:
+  - initialize(): подписка на сигналы, первичная загрузка детей корня.
+  - onItemExpanded(): при наличии плейсхолдера удаляет его и подгружает реальных детей.
+  - onItemChanged(): переименование; при ошибке — аккуратный откат текста с блокировкой сигналов.
+  - контекстное меню: добавить/переименовать/удалить (через сервис, с показом сообщений об ошибках).
+  - onRequestMove(): подтверждает DnD через сервис (при ошибке — отклоняет и показывает сообщение).
+
+include/secondwindow.h, src/secondwindow.cpp
+- Инициализирует Db (tree.sqlite), репозиторий, фабрику, сервис.
+- Подменяет стандартный QTreeWidget на TreeWidgetEx, если нужно.
+- Создаёт и подключает WidgetsTreeFeeler, выполняет первичную загрузку.
+- Оставлены вспомогательные методы add/remove/fill для совместимости.
+
+CMakeLists.txt
+- Подключает Qt6::Core, Gui, Widgets, OpenGLWidgets, Sql; использует AUTOUIC/AUTOMOC/AUTORCC.
+
+----------------------------------------
+3) Как использовать
+----------------------------------------
+Сборка (MinGW, как описано в help.txt):
+1) Конфигурация:
+   cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/g++.exe
+2) Сборка:
+   cmake --build build --config Debug --parallel
+3) Запуск:
+   build/app.exe
+
+Работа в UI:
+- Верхний уровень дерева — это дети скрытого системного корня (id=1). Сам корень в UI не отображается.
+- Добавление узла: ПКМ по нужному узлу или над свободной областью верхнего уровня → «Добавить ребёнка» → ввести имя. Имя валидируется (trim, без '/', не пустое, ≤255, уникальное среди сиблингов).
+- Переименование: выбрать узел и нажать F2/клик для редактирования, либо через контекстное меню. При конфликте/ошибке имя откатится, покажется сообщение.
+- Удаление: ПКМ → «Удалить» с подтверждением. Удаление каскадное (через ON DELETE CASCADE).
+- Перемещение (Drag&Drop): перетащить узел на другой узел (или в верхний уровень). Перемещение подтверждается сервисом (запрещено в собственное поддерево; соблюдается уникальность имён). При ошибке перемещение отменяется, UI не меняется.
+- Раскрытие узла: при наличии детей сначала показывается плейсхолдер «...». При раскрытии дети подгружаются из БД и плейсхолдер удаляется.
+
+Программный доступ (примерно):
+- buildPath(id): вернуть строковый путь вида "A/B/C" без ведущего '/'. Для корня — пустая строка.
+- resolvePath(path): вернуть id узла по пути, разбитому по '/'; пустая строка возвращает id корня.
+- setPayload/getPayload: хранение произвольного JSON-текста в поле payload.
+
+----------------------------------------
+4) Инварианты, валидация имён и поведение ошибок
+----------------------------------------
+- Уникальность имён среди детей одного родителя — case-sensitive (BINARY в SQLite, Qt::CaseSensitive в памяти).
+- Имя: trim, не пустое, без символа '/', длина ≤ 255.
+- Запрет перемещения узла внутрь собственного поддерева (MoveIntoDescendant).
+- Все write-операции — в транзакциях. При ошибках БД/блокировках выбрасывается DbError; при конфликте имён — DuplicateName; при некорректном имени — InvalidName; при отсутствии узла — NotFound.
+- Ошибки транслируются в UI с краткими сообщениями.
+
+----------------------------------------
+5) Lazy loading, Drag&Drop и особенности производительности
+----------------------------------------
+- Ленивая подгрузка: для узлов с детьми добавляется плейсхолдер-элемент (id=0), чтобы отрисовать стрелку. При раскрытии плейсхолдер удаляется, дети подгружаются по факту.
+- Drag&Drop: до изменения UI сервис проверяет корректность (уникальность/запрет циклов). Если проверка не проходит, dropEvent отменяется — UI остаётся неизменным.
+- buildPath оптимизирован через небольшой кеш id→(parentId,name) внутри TreeService; он инвалидируется при изменениях соответствующего узла.
+
+----------------------------------------
+6) Замечания по сборке/зависимостям
+----------------------------------------
+- Требуется Qt6 с модулем Sql (Qt6::Sql). В CMakeLists.txt компонент уже подключён.
+- При другой установке Qt скорректируйте CMAKE_PREFIX_PATH или используйте переменные окружения, как описано в help.txt.
+- Файл БД создаётся автоматически в корне (tree.sqlite). Если нужно другое место — поправьте вызов Db::openAndInit в src/secondwindow.cpp.

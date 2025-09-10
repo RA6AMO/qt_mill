@@ -41,7 +41,7 @@ target_include_directories(app PRIVATE
 )
 
 # Qt6 модули (Widgets достаточно для классических оконных приложений)
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets Sql)
 
 # Линкуем явно нужные библиотеки
 # Директории с библиотеками
@@ -68,6 +68,7 @@ target_link_libraries(app PRIVATE
   Qt6::Gui
   Qt6::Widgets
   Qt6::OpenGLWidgets
+  Qt6::Sql
 )
 
 if(MSVC)

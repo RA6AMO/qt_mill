@@ -1,3 +1,4 @@
+// secondwindow.h — окно, интегрирующее сервис/репозиторий/Db с QTreeWidget
 #pragma once
 // Защита от повторного включения заголовочного файла
 // Если SECONDWINDOW_H уже определён, препроцессор пропустит весь код до #endif
@@ -6,6 +7,7 @@
 
 // Подключаем базовый класс для создания окон в Qt
 #include <QMainWindow>
+class QSqlDatabase;
 
 class QTreeWidgetItem;
 class QString;
@@ -61,6 +63,13 @@ private:
     // Через него мы получаем доступ ко всем элементам интерфейса
     Ui::SecondWindow* ui;
     bool guest;
+
+    // Интеграция сервиса/БД
+    std::unique_ptr<class WidgetsTreeFeeler> m_feeler;
+    std::unique_ptr<class TreeService> m_service;
+    std::unique_ptr<class INodeRepository> m_repo;
+    std::unique_ptr<class INodeFactory> m_factory;
+    QSqlDatabase *m_db {nullptr};
 };
 
 #endif // SECONDWINDOW_H
