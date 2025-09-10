@@ -6,15 +6,18 @@
 
 #include <QStringList>
 
+// Внедряем зависимости: репозиторий (доступ к БД) и фабрика (нормализация/валидация имен)
 TreeService::TreeService(std::unique_ptr<INodeRepository> repo,
                          std::unique_ptr<INodeFactory> factory)
     : m_repo(std::move(repo)), m_factory(std::move(factory)) {}
 
+// Унифицирует и валидирует имя через фабрику имен
 void TreeService::ensureValidName(const QString &name) const {
     const QString normalized = m_factory->normalizeName(name);
     m_factory->validateName(normalized);
 }
 
+// Создание дочернего узла: имя нормализуется/валидируется, затем сохраняется в БД
 qint64 TreeService::createNode(qint64 parentId, const QString &name, std::optional<QString> payload) {
     ensureValidName(name);
     // Уникальность среди сиблингов обеспечит уникальный индекс
@@ -22,6 +25,7 @@ qint64 TreeService::createNode(qint64 parentId, const QString &name, std::option
     return m_repo->insert(parentId, normalized, payload);
 }
 
+// Переименование узла и инвалидация кеша метаданных этого узла
 void TreeService::renameNode(qint64 id, const QString &newName) {
     ensureValidName(newName);
     const QString normalized = m_factory->normalizeName(newName);
@@ -29,8 +33,10 @@ void TreeService::renameNode(qint64 id, const QString &newName) {
     invalidateCache(id);
 }
 
+// Небольшой враппер для явного сравнения qint64
 static bool safeEq(qint64 a, qint64 b) { return a == b; }
 
+// Проверяет, находится ли nodeId в поддереве potentialAncestorId (или совпадает)
 bool TreeService::isDescendant(qint64 nodeId, qint64 potentialAncestorId) {
     if (safeEq(nodeId, potentialAncestorId)) return true;
     auto parentOpt = m_repo->getParentId(nodeId);
@@ -42,6 +48,7 @@ bool TreeService::isDescendant(qint64 nodeId, qint64 potentialAncestorId) {
     return false;
 }
 
+// Перемещает узел к новому родителю; запрещено переносить в собственного потомка
 void TreeService::moveNode(qint64 id, qint64 newParentId) {
     if (isDescendant(newParentId, id)) {
         throw Errors::MoveIntoDescendant("Cannot move into own descendant");
@@ -50,6 +57,7 @@ void TreeService::moveNode(qint64 id, qint64 newParentId) {
     invalidateCache(id);
 }
 
+// Удаляет узел (кроме корня). Кеш очищается для затронутых узлов.
 void TreeService::deleteNode(qint64 id) {
     if (safeEq(id, ROOT_ID)) {
         throw Errors::InvalidName("Cannot delete root");
@@ -58,6 +66,7 @@ void TreeService::deleteNode(qint64 id) {
     invalidateCache(id);
 }
 
+// Подкачивает метаданные узла в кеш, если их еще нет
 void TreeService::warmCache(qint64 id) {
     if (m_metaCache.find(id) != m_metaCache.end()) return;
     auto r = m_repo->get(id);
@@ -66,10 +75,12 @@ void TreeService::warmCache(qint64 id) {
     m_metaCache[id] = std::move(ce);
 }
 
+// Инвалидация записи кеша по конкретному узлу
 void TreeService::invalidateCache(qint64 id) {
     m_metaCache.erase(id);
 }
 
+// Собирает путь от корня до узла вида "a/b/c". Корню соответствует пустая строка
 QString TreeService::buildPath(qint64 id) {
     if (safeEq(id, ROOT_ID)) return QString();
     QStringList segments;
@@ -89,6 +100,7 @@ QString TreeService::buildPath(qint64 id) {
     return segments.join('/');
 }
 
+// Ищет узел по строковому пути. Пустой путь => корень. Каждый сегмент нормализуется/валидируется
 qint64 TreeService::resolvePath(const QString &path) {
     if (path.isEmpty()) return ROOT_ID;
     const auto segments = path.split('/', Qt::SkipEmptyParts);
@@ -105,6 +117,7 @@ qint64 TreeService::resolvePath(const QString &path) {
     return current;
 }
 
+// Возвращает детей с пагинацией и признаком наличия потомков (для ленивой подгрузки UI)
 std::vector<NodeDTO> TreeService::listChildren(qint64 parentId, size_t limit, size_t offset) {
     auto rows = m_repo->getChildren(parentId);
     std::vector<NodeDTO> out;
@@ -123,12 +136,15 @@ std::vector<NodeDTO> TreeService::listChildren(qint64 parentId, size_t limit, si
     return out;
 }
 
+// Сохраняет произвольный JSON payload узла
 void TreeService::setPayload(qint64 id, const QString &payloadJson) {
     m_repo->setPayload(id, payloadJson);
 }
 
+// Возвращает JSON payload узла; при отсутствии — пустую строку
 QString TreeService::getPayload(qint64 id) {
     auto p = m_repo->getPayload(id);
     if (!p.has_value()) return QString();
     return p.value();
+
 }

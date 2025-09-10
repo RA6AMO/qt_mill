@@ -1,4 +1,11 @@
 // SqliteNodeRepository — реализация INodeRepository поверх QtSql (все write — транзакции)
+//
+// Ключевые моменты реализации:
+//  - Используется QSqlDatabase/QSqlQuery. Все операции изменения данных (insert/update/delete)
+//    обёрнуты в транзакции (transaction/commit, при ошибках — rollback).
+//  - Ошибки БД маппятся на исключения Errors::DbError, нарушения уникальности — на Errors::DuplicateName.
+//  - Временные метки updated_at/created_at пишутся в формате ISO UTC (см. nowIso()).
+//  - Семантика optional соответствует контракту интерфейса: NULL в БД => пустой optional.
 #include "INodeRepository.h"
 #include "Errors.h"
 
@@ -17,6 +24,8 @@ public:
         : m_db(std::move(db)) {}
 
     qint64 insert(qint64 parentId, const QString &name, const std::optional<QString> &payload) override {
+        // Вставка дочернего узла. Уникальность имени среди детей одного родителя
+        // обеспечивается уникальным индексом на (parent_id, name) на стороне БД.
         if (!m_db.transaction()) {
             throw Errors::DbError(m_db.lastError().text().toStdString());
         }
@@ -48,7 +57,8 @@ public:
             throw Errors::DbError(m_db.lastError().text().toStdString());
         }
 
-        // Проверка уникальности среди сиблингов через индекс — возложим на уникальный индекс, но нам нужен parent_id
+        // Перед обновлением проверяем существование узла (через получение parent_id).
+        // Уникальность среди сиблингов обеспечивает индекс (parent_id, name) в БД.
         auto parentOpt = getParentId(id);
         if (!parentOpt.has_value()) {
             m_db.rollback();
@@ -140,6 +150,7 @@ public:
 
     std::vector<RepoRow> getChildren(qint64 parentId) override {
         QSqlQuery q(m_db);
+        // Сортировка по имени в бинарной коллации для детерминированного порядка
         q.prepare("SELECT id, parent_id, name, payload FROM nodes WHERE parent_id = ? ORDER BY name COLLATE BINARY ASC");
         q.addBindValue(parentId);
         if (!q.exec()) throw Errors::DbError(q.lastError().text().toStdString());
@@ -161,7 +172,7 @@ public:
         q.addBindValue(id);
         if (!q.exec()) throw Errors::DbError(q.lastError().text().toStdString());
         if (!q.next()) return std::nullopt;
-        if (q.value(0).isNull()) return std::optional<qint64>{};
+        if (q.value(0).isNull()) return std::optional<qint64>{}; // корневой узел (parent_id IS NULL)
         return q.value(0).toLongLong();
     }
 
@@ -192,7 +203,7 @@ public:
         q.addBindValue(id);
         if (!q.exec()) throw Errors::DbError(q.lastError().text().toStdString());
         if (!q.next()) return std::nullopt;
-        if (q.value(0).isNull()) return std::optional<QString>{};
+        if (q.value(0).isNull()) return std::optional<QString>{}; // payload IS NULL
         return q.value(0).toString();
     }
 
