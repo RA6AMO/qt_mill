@@ -7,11 +7,14 @@
 #include <QtSql/QSqlDatabase>
 
 #include "Db.h"
-#include "INodeRepository.h"
 #include "INodeFactory.h"
 #include "TreeService.h"
 #include "widgetsTreeFeeler.h"
 #include "TreeWidgetEx.h"
+#include <QThread>
+#include <cstddef>
+
+
 
 // Конструктор SecondWindow
 // Список инициализации (:) выполняется до тела конструктора
@@ -68,6 +71,41 @@ SecondWindow::SecondWindow(QWidget* parent)
     // Преимущества: проверка типов на этапе компиляции, автодополнение в IDE
     connect(ui->backButton, &QPushButton::clicked,
             this, &SecondWindow::onBackButtonClicked);
+
+   // Возвращает всех детей родителя, отсортированных по имени.
+  // virtual std::vector<RepoRow> getChildren(qint64 parentId) = 0;
+
+   // Быстрая проверка наличия хотя бы одного ребёнка.
+    //  virtual bool hasChildren(qint64 id) = 0;
+
+    std::map<qint64, RepoRow> tree;
+    fillTreeMapRecursive(1, tree);
+    size_t size = tree.size();
+    QThread::sleep(10);
+
+}
+
+void SecondWindow::fillTreeMapRecursive(qint64 nodeId, std::map<qint64, RepoRow>& tree) {
+    if (!m_repo) return;
+
+    // Получаем данные узла по id
+    auto nodeOpt = m_repo->get(nodeId);
+    if (!nodeOpt.has_value()) {
+        return; // Узел не найден
+    }
+
+    RepoRow node = nodeOpt.value();
+
+    // Добавляем узел в map
+    tree[nodeId] = node;
+
+    // Получаем всех детей этого узла
+    std::vector<RepoRow> children = m_repo->getChildren(nodeId);
+
+    // Рекурсивно обрабатываем каждого ребёнка
+    for (const auto& child : children) {
+        fillTreeMapRecursive(child.id, tree);
+    }
 }
 
 bool SecondWindow::fillTreeWidget() {

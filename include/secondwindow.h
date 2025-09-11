@@ -7,6 +7,7 @@
 
 // Подключаем базовый класс для создания окон в Qt
 #include <QMainWindow>
+#include "INodeRepository.h"
 class QSqlDatabase;
 
 class QTreeWidgetItem;
@@ -36,6 +37,10 @@ public:
     bool fillTreeWidget();
     bool addItemToTreeWidget(QTreeWidgetItem *parent, const QString &text);
     bool removeItemFromTreeWidget(QTreeWidgetItem *item);
+
+    // Рекурсивная функция для заполнения map дерева
+    void fillTreeMapRecursive(qint64 nodeId, std::map<qint64, RepoRow>& tree);
+
     // Конструктор класса
     // explicit - запрещает неявное преобразование типов
     // QWidget* parent = nullptr - родительский виджет (для управления памятью)
