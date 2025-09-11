@@ -15,6 +15,7 @@ static QTreeWidgetItem* makeItem(const NodeDTO &dto) {
     auto *item = new QTreeWidgetItem();
     item->setText(COLUMN_NAME, dto.name);
     item->setData(COLUMN_NAME, Qt::UserRole, QVariant::fromValue<qlonglong>(dto.id));
+    item->setFlags(item->flags() | Qt::ItemIsEditable);
     return item;
 }
 
@@ -161,12 +162,13 @@ void WidgetsTreeFeeler::renameItem(QTreeWidgetItem *item) {
 
     // Убеждаемся, что элемент выделен
     m_tree->setCurrentItem(item);
+    //m_tree->setFocus();
 
     // Запускаем редактирование
     m_tree->editItem(item, COLUMN_NAME);
 
     // Проверяем, что редактирование действительно запустилось
-    if (!m_tree->isPersistentEditorOpen(item, COLUMN_NAME)) {
+    /*if (!m_tree->isPersistentEditorOpen(item, COLUMN_NAME)) {
         qDebug() << "renameItem: editItem failed, trying alternative approach";
         // Альтернативный способ - через двойной клик
         m_tree->setEditTriggers(QAbstractItemView::DoubleClicked);
@@ -174,7 +176,7 @@ void WidgetsTreeFeeler::renameItem(QTreeWidgetItem *item) {
             m_tree->editItem(item, COLUMN_NAME);
             m_tree->setEditTriggers(QAbstractItemView::EditKeyPressed | QAbstractItemView::SelectedClicked);
         });
-    }
+    }*/
 }
 
 void WidgetsTreeFeeler::deleteItem(QTreeWidgetItem *item) {
