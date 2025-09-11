@@ -19,10 +19,14 @@ public:
 
     void initialize(); // Подписка на сигналы и начальная загрузка root-детей
 
+    signals:
+    void itemClicked(qint64 id);
+
 private slots:
     void onItemExpanded(QTreeWidgetItem *item);
     void onItemChanged(QTreeWidgetItem *item, int column);
     void onCustomContextMenuRequested(const QPoint &pos);
+    void onItemClicked(QTreeWidgetItem *item, int column);
     void onRequestMove(qint64 nodeId, qint64 newParentId, bool &accepted);
 
 private:

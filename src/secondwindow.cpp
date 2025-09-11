@@ -132,35 +132,3 @@ void SecondWindow::onBackButtonClicked() {
     // После испускания сигнала MainWindow получит уведомление
     // и выполнит соответствующие действия (покажет себя и скроет это окно)
 }
-/*
-bool SecondWindow::fillTreeWidget() {
-    QTreeWidgetItem *Root1 = new QTreeWidgetItem(ui->treeWidget);
-    Root1->setText(0, "Фрезы");
-
-    QTreeWidgetItem *Root1_1 = new QTreeWidgetItem(Root1);
-    Root1_1->setText(0, "Фрезы концевые");
-    QTreeWidgetItem *Root1_2 = new QTreeWidgetItem(Root1);
-    Root1_2->setText(0, "Фрезы торцевые");
-
-    QTreeWidgetItem *Root2 = new QTreeWidgetItem(ui->treeWidget);
-    Root2->setText(0, "Сверла");
-
-    QTreeWidgetItem *Root2_1 = new QTreeWidgetItem(Root2);
-    Root2_1->setText(0, "Сверла проходные");
-    QTreeWidgetItem *Root2_2 = new QTreeWidgetItem(Root2);
-    Root2_2->setText(0, "Сверла ружейные");
-
-    return true;
-}
-
-bool SecondWindow::addItemToTreeWidget(QTreeWidgetItem *parent, const QString &text) {
-    QTreeWidgetItem *item = new QTreeWidgetItem(parent);
-    item->setText(0, text);
-    return true;
-}
-
-bool SecondWindow::removeItemFromTreeWidget(QTreeWidgetItem *item) {
-    delete item;
-    return true;
-}
-    */

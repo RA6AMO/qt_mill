@@ -15,7 +15,9 @@ static QTreeWidgetItem* makeItem(const NodeDTO &dto) {
     auto *item = new QTreeWidgetItem();
     item->setText(COLUMN_NAME, dto.name);
     item->setData(COLUMN_NAME, Qt::UserRole, QVariant::fromValue<qlonglong>(dto.id));
-    item->setFlags(item->flags() | Qt::ItemIsEditable);
+
+    //item->setFlags(item->flags() | Qt::ItemIsEditable);
+
     return item;
 }
 
@@ -37,12 +39,22 @@ void WidgetsTreeFeeler::initialize() {
 
     connect(m_tree, &QTreeWidget::itemExpanded, this, &WidgetsTreeFeeler::onItemExpanded);
     connect(m_tree, &QTreeWidget::itemChanged, this, &WidgetsTreeFeeler::onItemChanged);
+    connect(m_tree, &QTreeWidget::itemClicked, this, &WidgetsTreeFeeler::onItemClicked);
     connect(m_tree, &QWidget::customContextMenuRequested, this, &WidgetsTreeFeeler::onCustomContextMenuRequested);
     connect(m_tree, &TreeWidgetEx::requestMove, this, &WidgetsTreeFeeler::onRequestMove);
 
     // Начальная загрузка: дети корня (id=1) — это топ-уровень
     m_tree->clear();
     loadChildrenInto(nullptr, TreeService::ROOT_ID);
+}
+
+void WidgetsTreeFeeler::onItemClicked(QTreeWidgetItem *item, int column) {
+    if (!item || column != COLUMN_NAME) return;
+    const qint64 id = item->data(COLUMN_NAME, Qt::UserRole).toLongLong();
+    if (id == 0) return; // плейсхолдер
+
+    qDebug() << "onItemClicked: item id:" << id;
+
 }
 
 void WidgetsTreeFeeler::loadChildrenInto(QTreeWidgetItem *parentItem, qint64 parentId) {
@@ -142,6 +154,7 @@ void WidgetsTreeFeeler::createChild(QTreeWidgetItem *parentItem) {
 }
 
 void WidgetsTreeFeeler::renameItem(QTreeWidgetItem *item) {
+    item->setFlags(item->flags() | Qt::ItemIsEditable);
     if (!item) {
         qDebug() << "renameItem: item is null";
         return;
@@ -166,6 +179,8 @@ void WidgetsTreeFeeler::renameItem(QTreeWidgetItem *item) {
 
     // Запускаем редактирование
     m_tree->editItem(item, COLUMN_NAME);
+
+    item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 
     // Проверяем, что редактирование действительно запустилось
     /*if (!m_tree->isPersistentEditorOpen(item, COLUMN_NAME)) {
