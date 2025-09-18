@@ -8,6 +8,7 @@
 // Подключаем базовый класс для создания окон в Qt
 #include <QMainWindow>
 #include "INodeRepository.h"
+#include <map>
 class QSqlDatabase;
 
 class QTreeWidgetItem;
@@ -31,7 +32,6 @@ class SecondWindow : public QMainWindow {
     // 2. Метаобъектной системы Qt (рефлексия, динамические свойства)
     // 3. Интернационализации (перевода интерфейса)
     Q_OBJECT
-
 public:
     void guestSeterT();
     bool fillTreeWidget();
@@ -76,6 +76,12 @@ private:
     std::unique_ptr<class INodeRepository> m_repo;
     std::unique_ptr<class INodeFactory> m_factory;
     QSqlDatabase *m_db {nullptr};
+
+    std::map<qint64, RepoRow> m_treeMap;
+
+public:
+    const std::map<qint64, RepoRow>& getTreeMap() const { return m_treeMap; }
+    void resetTreeMap();
 };
 
 #endif // SECONDWINDOW_H

@@ -38,6 +38,7 @@ SecondWindow::SecondWindow(QWidget* parent)
     m_repo = makeSqliteNodeRepository(*m_db);
     m_service = std::make_unique<TreeService>(std::move(m_repo), std::move(m_factory));
 
+    resetTreeMap();
     // Подмена QTreeWidget на расширенный класс в рантайме не требуется — он уже QTreeWidget.
     // Для простоты обернём существующий в feeler (он принимает TreeWidgetEx*, кастуем безопасно)
     auto *treeEx = qobject_cast<TreeWidgetEx*>(ui->treeWidget);
@@ -77,12 +78,17 @@ SecondWindow::SecondWindow(QWidget* parent)
 
    // Быстрая проверка наличия хотя бы одного ребёнка.
     //  virtual bool hasChildren(qint64 id) = 0;
-
+/*
     std::map<qint64, RepoRow> tree;
     fillTreeMapRecursive(1, tree);
     size_t size = tree.size();
-    QThread::sleep(10);
+*/
+    //QThread::sleep(10);
+}
 
+void SecondWindow::resetTreeMap() {
+    m_treeMap.clear();
+    fillTreeMapRecursive(1, m_treeMap);
 }
 
 void SecondWindow::fillTreeMapRecursive(qint64 nodeId, std::map<qint64, RepoRow>& tree) {
@@ -107,6 +113,7 @@ void SecondWindow::fillTreeMapRecursive(qint64 nodeId, std::map<qint64, RepoRow>
         fillTreeMapRecursive(child.id, tree);
     }
 }
+
 
 bool SecondWindow::fillTreeWidget() {
     if (m_feeler) { m_feeler->initialize(); return true; }

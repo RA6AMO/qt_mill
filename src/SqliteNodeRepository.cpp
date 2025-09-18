@@ -49,6 +49,7 @@ public:
         if (!m_db.commit()) {
             throw Errors::DbError(m_db.lastError().text().toStdString());
         }
+        emit treeMapChanged();
         return id;
     }
 
@@ -79,6 +80,7 @@ public:
         if (!m_db.commit()) {
             throw Errors::DbError(m_db.lastError().text().toStdString());
         }
+        emit treeMapChanged();
     }
 
     void updateParent(qint64 id, qint64 newParentId) override {
@@ -99,6 +101,7 @@ public:
         if (!m_db.commit()) {
             throw Errors::DbError(m_db.lastError().text().toStdString());
         }
+        emit treeMapChanged();
     }
 
     void remove(qint64 id) override {
@@ -115,6 +118,7 @@ public:
         if (!m_db.commit()) {
             throw Errors::DbError(m_db.lastError().text().toStdString());
         }
+        emit treeMapChanged();
     }
 
     std::optional<RepoRow> get(qint64 id) override {
@@ -195,6 +199,7 @@ public:
         q.addBindValue(id);
         if (!q.exec()) { m_db.rollback(); throw Errors::DbError(q.lastError().text().toStdString()); }
         if (!m_db.commit()) throw Errors::DbError(m_db.lastError().text().toStdString());
+        emit treeMapChanged();
     }
 
     std::optional<QString> getPayload(qint64 id) override {
