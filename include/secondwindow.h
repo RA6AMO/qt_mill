@@ -1,3 +1,4 @@
+
 // secondwindow.h — окно, интегрирующее сервис/репозиторий/Db с QTreeWidget
 #pragma once
 // Защита от повторного включения заголовочного файла
@@ -80,7 +81,9 @@ private:
     std::map<qint64, RepoRow> m_treeMap;
 
 public:
-    const std::map<qint64, RepoRow>& getTreeMap() const { return m_treeMap; }
+    //const std::map<qint64, RepoRow>& getTreeMap() const { return m_treeMap; }
+
+public slots:
     void resetTreeMap();
 };
 

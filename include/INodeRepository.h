@@ -9,6 +9,7 @@
 #include <QtGlobal>
 #include <QString>
 #include <optional>
+#include <qobject.h>
 #include <qtmetamacros.h>
 #include <vector>
 #include <QObject>
@@ -30,11 +31,14 @@ struct RepoRow {
     std::optional<QString> payload;
 };
 
-class INodeRepository : public QObject {
+
+
+class INodeRepository {
 public:
     virtual ~INodeRepository() = default;
 
-    Q_OBJECT
+
+
     // Создаёт новую запись узла.
     //  - parentId: идентификатор родителя (ожидается существование)
     //  - name: имя узла; в БД предполагается уникальный индекс (parent_id, name)
@@ -76,8 +80,8 @@ public:
     virtual void setPayload(qint64 id, const QString &payloadJson) = 0;
     virtual std::optional<QString> getPayload(qint64 id) = 0;
 
-    signals:
-        void treeMapChanged();
+    //virtual QObject* asQObject() = 0;
+
 };
 
 // Фабрика репозитория (скрываем QSqlDatabase в реализационном cpp)

@@ -4,9 +4,11 @@
 #include <QtGlobal>
 #include <QString>
 #include <optional>
+#include <qtypes.h>
 #include <vector>
 #include <unordered_map>
 
+#include "INodeRepository.h"
 #include "Node.h"
 class INodeRepository;
 class INodeFactory;
@@ -50,6 +52,8 @@ public:
     void setPayload(qint64 id, const QString &payloadJson);
     QString getPayload(qint64 id);
 
+    const std::map<qint64, RepoRow> getTree();
+
 private:
     // Доступ к хранилищу узлов (БД) и бизнес-правилам имен.
     std::unique_ptr<INodeRepository> m_repo;
@@ -70,4 +74,8 @@ private:
 
     // Удаляет запись о метаданных узла из кеша.
     void invalidateCache(qint64 id);
+
+    std::map<qint64, RepoRow> tree;
+    void fillTreeMapRecursive(qint64 nodeId, std::map<qint64, RepoRow>& tree);
+    void resetTreeMap();
 };

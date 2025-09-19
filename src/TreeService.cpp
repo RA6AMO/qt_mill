@@ -9,7 +9,10 @@
 // Внедряем зависимости: репозиторий (доступ к БД) и фабрика (нормализация/валидация имен)
 TreeService::TreeService(std::unique_ptr<INodeRepository> repo,
                          std::unique_ptr<INodeFactory> factory)
-    : m_repo(std::move(repo)), m_factory(std::move(factory)) {}
+    : m_repo(std::move(repo)), m_factory(std::move(factory))
+    {
+        resetTreeMap();
+    }
 
 // Унифицирует и валидирует имя через фабрику имен
 void TreeService::ensureValidName(const QString &name) const {
@@ -147,4 +150,37 @@ QString TreeService::getPayload(qint64 id) {
     if (!p.has_value()) return QString();
     return p.value();
 
+}
+
+void TreeService::fillTreeMapRecursive(qint64 nodeId, std::map<qint64, RepoRow>& tree) {
+    if (!m_repo) return;
+
+    // Получаем данные узла по id
+    auto nodeOpt = m_repo->get(nodeId);
+    if (!nodeOpt.has_value()) {
+        return; // Узел не найден
+    }
+
+    RepoRow node = nodeOpt.value();
+
+    // Добавляем узел в map
+    tree[nodeId] = node;
+
+    // Получаем всех детей этого узла
+    std::vector<RepoRow> children = m_repo->getChildren(nodeId);
+
+    // Рекурсивно обрабатываем каждого ребёнка
+    for (const auto& child : children) {
+        fillTreeMapRecursive(child.id, tree);
+    }
+}
+
+void TreeService::resetTreeMap() {
+    tree.clear();
+    fillTreeMapRecursive(1, tree);
+}
+
+const std::map<qint64, RepoRow> TreeService::getTree(){
+    resetTreeMap();
+    return tree;
 }

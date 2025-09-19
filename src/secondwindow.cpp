@@ -12,7 +12,8 @@
 #include "widgetsTreeFeeler.h"
 #include "TreeWidgetEx.h"
 #include <QThread>
-#include <cstddef>
+//#include <cstddef>
+#include <qobject.h>
 
 
 
@@ -36,9 +37,10 @@ SecondWindow::SecondWindow(QWidget* parent)
     m_db = new QSqlDatabase(db);
     m_factory = makeNodeFactory();
     m_repo = makeSqliteNodeRepository(*m_db);
+
+
     m_service = std::make_unique<TreeService>(std::move(m_repo), std::move(m_factory));
 
-    resetTreeMap();
     // Подмена QTreeWidget на расширенный класс в рантайме не требуется — он уже QTreeWidget.
     // Для простоты обернём существующий в feeler (он принимает TreeWidgetEx*, кастуем безопасно)
     auto *treeEx = qobject_cast<TreeWidgetEx*>(ui->treeWidget);
@@ -85,7 +87,7 @@ SecondWindow::SecondWindow(QWidget* parent)
 */
     //QThread::sleep(10);
 }
-
+/*
 void SecondWindow::resetTreeMap() {
     m_treeMap.clear();
     fillTreeMapRecursive(1, m_treeMap);
@@ -113,7 +115,7 @@ void SecondWindow::fillTreeMapRecursive(qint64 nodeId, std::map<qint64, RepoRow>
         fillTreeMapRecursive(child.id, tree);
     }
 }
-
+*/
 
 bool SecondWindow::fillTreeWidget() {
     if (m_feeler) { m_feeler->initialize(); return true; }
@@ -126,6 +128,8 @@ bool SecondWindow::addItemToTreeWidget(QTreeWidgetItem *parent, const QString &t
     if (parent) parentId = parent->data(0, Qt::UserRole).toLongLong();
     try {
         const qint64 newId = m_service->createNode(parentId, text, {});
+        m_treeMap.clear();
+        m_treeMap = m_service->getTree();
         QTreeWidgetItem *item = new QTreeWidgetItem();
         item->setText(0, text);
         item->setData(0, Qt::UserRole, QVariant::fromValue<qlonglong>(newId));
@@ -141,6 +145,8 @@ bool SecondWindow::removeItemFromTreeWidget(QTreeWidgetItem *item) {
     const qint64 id = item->data(0, Qt::UserRole).toLongLong();
     try {
         m_service->deleteNode(id);
+        m_treeMap.clear();
+        m_treeMap = m_service->getTree();
         delete item;
         return true;
     } catch (...) {
