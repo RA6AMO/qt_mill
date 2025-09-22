@@ -63,6 +63,7 @@ private slots:
     // private slots - приватные слоты, доступные только внутри класса
     // Этот слот будет вызываться при нажатии кнопки "Назад"
     void onBackButtonClicked();
+    void treeButtn();
 
 
 private:
@@ -83,8 +84,8 @@ private:
 public:
     //const std::map<qint64, RepoRow>& getTreeMap() const { return m_treeMap; }
 
-public slots:
-    void resetTreeMap();
+//public slots:
+  //  void resetTreeMap();
 };
 
 #endif // SECONDWINDOW_H

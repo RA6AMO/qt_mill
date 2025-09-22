@@ -64,6 +64,74 @@ QPushButton:pressed {
      </property>
     </column>
    </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>140</y>
+      <width>151</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    color: #ffffff;
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                      stop:0 #4e9cff, stop:1 #1c6eff);
+    border: 0px;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-weight: 600;
+    outline: none;
+}
+
+QPushButton:hover {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                      stop:0 #67adff, stop:1 #2e7dff);
+}
+
+QPushButton:pressed {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                      stop:0 #2e7dff, stop:1 #1b5fe0);
+    padding-top: 9px;   /* легкая имитация нажатия */
+    padding-bottom: 7px;
+}
+
+QPushButton:disabled {
+    background: #a0a0a0;
+    color: #eeeeee;
+}
+QPushButton[variant=&quot;glass&quot;] {
+    color: #ffffff;
+    background-color: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 12px;
+    padding: 8px 16px;
+}
+QPushButton[variant=&quot;glass&quot;]:hover {
+    background-color: rgba(255,255,255,0.18);
+}
+QPushButton[variant=&quot;glass&quot;]:pressed {
+    background-color: rgba(255,255,255,0.26);
+}</string>
+    </property>
+    <property name="text">
+     <string>PushButton</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="bt_flex">
+    <property name="geometry">
+     <rect>
+      <x>560</x>
+      <y>400</y>
+      <width>151</width>
+      <height>111</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PushButton</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

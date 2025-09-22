@@ -3,6 +3,7 @@
 #include "secondwindow.h"
 // Подключаем автоматически сгенерированный UI-класс
 // Файл ui_secondwindow.h создаётся из secondwindow.ui при компиляции
+#include "INodeRepository.h"
 #include "ui_secondwindow.h"
 #include <QtSql/QSqlDatabase>
 
@@ -14,6 +15,9 @@
 #include <QThread>
 //#include <cstddef>
 #include <qobject.h>
+#include <QMessageBox>
+#include <qtypes.h>
+#include <windows.h>
 
 
 
@@ -75,47 +79,15 @@ SecondWindow::SecondWindow(QWidget* parent)
     connect(ui->backButton, &QPushButton::clicked,
             this, &SecondWindow::onBackButtonClicked);
 
-   // Возвращает всех детей родителя, отсортированных по имени.
-  // virtual std::vector<RepoRow> getChildren(qint64 parentId) = 0;
+    connect(ui->pushButton,&QPushButton::clicked,this,&SecondWindow::treeButtn);
 
-   // Быстрая проверка наличия хотя бы одного ребёнка.
-    //  virtual bool hasChildren(qint64 id) = 0;
-/*
-    std::map<qint64, RepoRow> tree;
-    fillTreeMapRecursive(1, tree);
-    size_t size = tree.size();
-*/
-    //QThread::sleep(10);
-}
-/*
-void SecondWindow::resetTreeMap() {
-    m_treeMap.clear();
-    fillTreeMapRecursive(1, m_treeMap);
 }
 
-void SecondWindow::fillTreeMapRecursive(qint64 nodeId, std::map<qint64, RepoRow>& tree) {
-    if (!m_repo) return;
-
-    // Получаем данные узла по id
-    auto nodeOpt = m_repo->get(nodeId);
-    if (!nodeOpt.has_value()) {
-        return; // Узел не найден
-    }
-
-    RepoRow node = nodeOpt.value();
-
-    // Добавляем узел в map
-    tree[nodeId] = node;
-
-    // Получаем всех детей этого узла
-    std::vector<RepoRow> children = m_repo->getChildren(nodeId);
-
-    // Рекурсивно обрабатываем каждого ребёнка
-    for (const auto& child : children) {
-        fillTreeMapRecursive(child.id, tree);
-    }
+void SecondWindow::treeButtn(){
+   // QMessageBox::information(this,QString::fromUtf8("Проверка"),QString::fromUtf8("Кнопка нажата"));
+    std::map<qint64,RepoRow> tree = m_service->getTree();
+    Sleep(1);
 }
-*/
 
 bool SecondWindow::fillTreeWidget() {
     if (m_feeler) { m_feeler->initialize(); return true; }
