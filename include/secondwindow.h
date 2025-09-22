@@ -35,9 +35,6 @@ class SecondWindow : public QMainWindow {
     Q_OBJECT
 public:
     void guestSeterT();
-    bool fillTreeWidget();
-    bool addItemToTreeWidget(QTreeWidgetItem *parent, const QString &text);
-    bool removeItemFromTreeWidget(QTreeWidgetItem *item);
 
     // Рекурсивная функция для заполнения map дерева
     void fillTreeMapRecursive(qint64 nodeId, std::map<qint64, RepoRow>& tree);
@@ -82,10 +79,7 @@ private:
     std::map<qint64, RepoRow> m_treeMap;
 
 public:
-    //const std::map<qint64, RepoRow>& getTreeMap() const { return m_treeMap; }
 
-//public slots:
-  //  void resetTreeMap();
 };
 
 #endif // SECONDWINDOW_H

@@ -52,6 +52,8 @@ public:
     void setPayload(qint64 id, const QString &payloadJson);
     QString getPayload(qint64 id);
 
+    void resetTreeMap();
+
     const std::map<qint64, RepoRow> getTree();
 
 private:
@@ -77,5 +79,5 @@ private:
 
     std::map<qint64, RepoRow> tree;
     void fillTreeMapRecursive(qint64 nodeId, std::map<qint64, RepoRow>& tree);
-    void resetTreeMap();
+
 };

@@ -181,6 +181,5 @@ void TreeService::resetTreeMap() {
 }
 
 const std::map<qint64, RepoRow> TreeService::getTree(){
-    resetTreeMap();
     return tree;
 }

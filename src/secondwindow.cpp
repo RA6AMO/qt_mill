@@ -44,6 +44,7 @@ SecondWindow::SecondWindow(QWidget* parent)
 
 
     m_service = std::make_unique<TreeService>(std::move(m_repo), std::move(m_factory));
+    m_service->resetTreeMap();
 
     // Подмена QTreeWidget на расширенный класс в рантайме не требуется — он уже QTreeWidget.
     // Для простоты обернём существующий в feeler (он принимает TreeWidgetEx*, кастуем безопасно)
@@ -86,44 +87,7 @@ SecondWindow::SecondWindow(QWidget* parent)
 void SecondWindow::treeButtn(){
    // QMessageBox::information(this,QString::fromUtf8("Проверка"),QString::fromUtf8("Кнопка нажата"));
     std::map<qint64,RepoRow> tree = m_service->getTree();
-    Sleep(1);
-}
 
-bool SecondWindow::fillTreeWidget() {
-    if (m_feeler) { m_feeler->initialize(); return true; }
-    return false;
-}
-
-bool SecondWindow::addItemToTreeWidget(QTreeWidgetItem *parent, const QString &text) {
-    if (!ui || !ui->treeWidget || !m_service) return false;
-    qint64 parentId = 1;
-    if (parent) parentId = parent->data(0, Qt::UserRole).toLongLong();
-    try {
-        const qint64 newId = m_service->createNode(parentId, text, {});
-        m_treeMap.clear();
-        m_treeMap = m_service->getTree();
-        QTreeWidgetItem *item = new QTreeWidgetItem();
-        item->setText(0, text);
-        item->setData(0, Qt::UserRole, QVariant::fromValue<qlonglong>(newId));
-        if (parent) parent->addChild(item); else ui->treeWidget->addTopLevelItem(item);
-        return true;
-    } catch (...) {
-        return false;
-    }
-}
-
-bool SecondWindow::removeItemFromTreeWidget(QTreeWidgetItem *item) {
-    if (!item || !m_service) return false;
-    const qint64 id = item->data(0, Qt::UserRole).toLongLong();
-    try {
-        m_service->deleteNode(id);
-        m_treeMap.clear();
-        m_treeMap = m_service->getTree();
-        delete item;
-        return true;
-    } catch (...) {
-        return false;
-    }
 }
 
 // Деструктор SecondWindow
