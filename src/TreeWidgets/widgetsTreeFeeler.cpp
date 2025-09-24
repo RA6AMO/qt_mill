@@ -221,6 +221,7 @@ void WidgetsTreeFeeler::onRequestMove(qint64 nodeId, qint64 newParentId, bool &a
 void WidgetsTreeFeeler::onItemDoubleClicked(QTreeWidgetItem *item, int column) {
     if (!item || column != COLUMN_NAME) return;
     const qint64 id = item->data(COLUMN_NAME, Qt::UserRole).toLongLong();
+    emit itemDoubleClicked(id);
     if (id == 0) return; // плейсхолдер
     //renameItem(item);
 }

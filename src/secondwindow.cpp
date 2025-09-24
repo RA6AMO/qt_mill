@@ -19,8 +19,6 @@
 #include <qtypes.h>
 #include <windows.h>
 
-
-
 // Конструктор SecondWindow
 // Список инициализации (:) выполняется до тела конструктора
 SecondWindow::SecondWindow(QWidget* parent)
@@ -77,17 +75,14 @@ SecondWindow::SecondWindow(QWidget* parent)
     //
     // Новый синтаксис Qt5/Qt6 с указателями на функции-члены
     // Преимущества: проверка типов на этапе компиляции, автодополнение в IDE
-    connect(ui->backButton, &QPushButton::clicked,
-            this, &SecondWindow::onBackButtonClicked);
-
-    connect(ui->pushButton,&QPushButton::clicked,this,&SecondWindow::treeButtn);
+    connect(ui->backButton, &QPushButton::clicked,this, &SecondWindow::onBackButtonClicked);
+    //connect(ui->pushButton,&QPushButton::clicked,this,&SecondWindow::treeButtn);
+    connect(m_feeler.get(), &WidgetsTreeFeeler::itemDoubleClicked, this, &SecondWindow::treeButtn);
 
 }
 
-void SecondWindow::treeButtn(){
-   // QMessageBox::information(this,QString::fromUtf8("Проверка"),QString::fromUtf8("Кнопка нажата"));
+void SecondWindow::treeButtn(qint64 id){
     std::map<qint64,RepoRow> tree = m_service->getTree();
-
 }
 
 // Деструктор SecondWindow

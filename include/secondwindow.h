@@ -60,7 +60,7 @@ private slots:
     // private slots - приватные слоты, доступные только внутри класса
     // Этот слот будет вызываться при нажатии кнопки "Назад"
     void onBackButtonClicked();
-    void treeButtn();
+    void treeButtn(qint64 id);
 
 
 private:

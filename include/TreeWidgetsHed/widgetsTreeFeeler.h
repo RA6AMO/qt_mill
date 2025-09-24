@@ -21,6 +21,7 @@ public:
 
     signals:
     void itemClicked(qint64 id);
+    void itemDoubleClicked(qint64 id);
 
 private slots:
     void onItemExpanded(QTreeWidgetItem *item);
