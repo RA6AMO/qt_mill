@@ -21,6 +21,7 @@ public:
 
     signals:
     void itemClicked(qint64 id);
+    void itemDoubleClicked(qint64 id);
 
 private slots:
     void onItemExpanded(QTreeWidgetItem *item);
@@ -28,6 +29,7 @@ private slots:
     void onCustomContextMenuRequested(const QPoint &pos);
     void onItemClicked(QTreeWidgetItem *item, int column);
     void onRequestMove(qint64 nodeId, qint64 newParentId, bool &accepted);
+    void onItemDoubleClicked(QTreeWidgetItem *item, int column);
 
 private:
     QPointer<TreeWidgetEx> m_tree;

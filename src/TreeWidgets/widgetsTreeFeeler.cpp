@@ -42,6 +42,7 @@ void WidgetsTreeFeeler::initialize() {
     connect(m_tree, &QTreeWidget::itemClicked, this, &WidgetsTreeFeeler::onItemClicked);
     connect(m_tree, &QWidget::customContextMenuRequested, this, &WidgetsTreeFeeler::onCustomContextMenuRequested);
     connect(m_tree, &TreeWidgetEx::requestMove, this, &WidgetsTreeFeeler::onRequestMove);
+    connect(m_tree, &QTreeWidget::itemDoubleClicked, this, &WidgetsTreeFeeler::onItemDoubleClicked);
 
     // Начальная загрузка: дети корня (id=1) — это топ-уровень
     m_tree->clear();
@@ -215,4 +216,12 @@ void WidgetsTreeFeeler::onRequestMove(qint64 nodeId, qint64 newParentId, bool &a
         accepted = false;
         QMessageBox::warning(m_tree, "Перемещение", QString::fromUtf8(ex.what()));
     }
+}
+
+void WidgetsTreeFeeler::onItemDoubleClicked(QTreeWidgetItem *item, int column) {
+    if (!item || column != COLUMN_NAME) return;
+    const qint64 id = item->data(COLUMN_NAME, Qt::UserRole).toLongLong();
+    emit itemDoubleClicked(id);
+    if (id == 0) return; // плейсхолдер
+    //renameItem(item);
 }

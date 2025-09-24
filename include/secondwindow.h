@@ -1,3 +1,4 @@
+
 // secondwindow.h — окно, интегрирующее сервис/репозиторий/Db с QTreeWidget
 #pragma once
 // Защита от повторного включения заголовочного файла
@@ -34,9 +35,6 @@ class SecondWindow : public QMainWindow {
     Q_OBJECT
 public:
     void guestSeterT();
-    bool fillTreeWidget();
-    bool addItemToTreeWidget(QTreeWidgetItem *parent, const QString &text);
-    bool removeItemFromTreeWidget(QTreeWidgetItem *item);
 
     // Рекурсивная функция для заполнения map дерева
     void fillTreeMapRecursive(qint64 nodeId, std::map<qint64, RepoRow>& tree);
@@ -62,6 +60,7 @@ private slots:
     // private slots - приватные слоты, доступные только внутри класса
     // Этот слот будет вызываться при нажатии кнопки "Назад"
     void onBackButtonClicked();
+    void treeButtn(qint64 id);
 
 
 private:
@@ -80,8 +79,7 @@ private:
     std::map<qint64, RepoRow> m_treeMap;
 
 public:
-    const std::map<qint64, RepoRow>& getTreeMap() const { return m_treeMap; }
-    void resetTreeMap();
+
 };
 
 #endif // SECONDWINDOW_H

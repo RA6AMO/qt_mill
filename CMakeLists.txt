@@ -25,11 +25,15 @@ set(THIRD_PARTY_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/libs/include")
 
 file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_SOURCE_DIR}/src/*.cpp"
+  "${CMAKE_SOURCE_DIR}/src/TreeWidgets/*.cpp"
+  "${CMAKE_SOURCE_DIR}/src/DB/*.cpp"
 )
 
 # Добавляем заголовочные файлы для правильной работы MOC с Q_OBJECT
 file(GLOB_RECURSE PROJECT_HEADERS CONFIGURE_DEPENDS
   "${CMAKE_SOURCE_DIR}/include/*.h"
+  "${CMAKE_SOURCE_DIR}/include/TreeWidgetsHed/*.h"
+  "${CMAKE_SOURCE_DIR}/include/DBhead/*.h"
 )
 
 add_executable(app ${PROJECT_SOURCES} ${PROJECT_HEADERS})
@@ -37,6 +41,8 @@ add_executable(app ${PROJECT_SOURCES} ${PROJECT_HEADERS})
 # Используем найденные папки с заголовками
 target_include_directories(app PRIVATE
     "${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/include/TreeWidgetsHed"
+    "${CMAKE_SOURCE_DIR}/include/DBhead"
     ${THIRD_PARTY_INCLUDE_DIR}
 )
 
